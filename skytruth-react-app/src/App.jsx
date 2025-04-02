@@ -3,6 +3,8 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 import "./App.css";
+const MAPBOX_TOKEN = import.meta.env.VITE_APP_MAPBOX_TOKEN;
+const OUTDOORS_TOKEN = import.meta.env.VITE_APP_OUTDOORS_TOKEN;
 
 const fetchEarthquakesData = async (bounds) => {
   try {
@@ -42,8 +44,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    mapboxgl.accessToken =
-      "pk.eyJ1IjoiamVubnlmZXJwaW50byIsImEiOiJjbTJjMHJ0ZG8wdmRsMmtxNHBnY25pdzN5In0.hvghkimWChc1NXcRUz4jRg";
+    mapboxgl.accessToken = MAPBOX_TOKEN;
 
     mapRef.current = new mapboxgl.Map({
       container: mapContainerRef.current,
@@ -59,7 +60,7 @@ function App() {
       mapRef.current.addSource("outdoors", {
         type: "raster",
         tiles: [
-          `https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=e7010c2cd85143beb04c0c07cf17fac1`,
+          `https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=${OUTDOORS_TOKEN}`,
         ],
         tileSize: 256,
       });
@@ -99,7 +100,8 @@ function App() {
 
       mapRef.current.on("click", "earthquakes-layer", (e) => {
         if (popupRef.current.isOpen()) {
-          popupRef.current.remove();
+          // should this be moved to the useEffect cleanup?
+          popupRef.current.remove(); // right now I am removing the popup on every click and re-adding it later on
         }
 
         // center map on clicked earthquake point
@@ -128,8 +130,10 @@ function App() {
       });
     });
 
+    // fetch on moving map around with updated bounds
     mapRef.current.on("moveend", async () => {
       const updatedBounds = mapRef.current?.getBounds();
+      // should be debouncing this query
       const earthquakeData = await fetchEarthquakesData(updatedBounds);
 
       if (earthquakeData) {
