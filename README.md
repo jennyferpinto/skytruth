@@ -1,6 +1,5 @@
 # skytruth
 
-Skytruth take home assignment
 
 Instructions to run app locally:
 
